@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Chronos Leap — a celestial, algorithmic exploration of the Gregorian leap year." />
+  <title>Chronos Leap | The Algorithm of Time</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-void: #05050a;
+      --bg-glass: rgba(15, 15, 25, 0.72);
+      --accent-gold: #d4af37;
+      --accent-rose: #b76e79;
+      --accent-ice: #a0d8ef;
+      --text-primary: #f4f1ea;
+      --text-muted: #9ca3af;
+      --border: rgba(212, 175, 55, 0.18);
+      --success: #4ade80;
+      --danger: #f87171;
+      --radius: 20px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(183, 110, 121, 0.14) 0%, transparent 35%),
+        radial-gradient(circle at 85% 80%, rgba(160, 216, 239, 0.11) 0%, transparent 35%),
+        radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.06) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 4rem 0 2.5rem;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      background: rgba(212, 175, 55, 0.05);
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      line-height: 1.05;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-gold) 60%, var(--accent-rose) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.75rem;
+      margin-top: 3rem;
+    }
+
+    .card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      backdrop-filter: blur(22px);
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(212, 175, 55, 0.4);
+      box-shadow: 0 32px 100px rgba(0, 0, 0, 0.65), 0 0 40px rgba(212, 175, 55, 0.08);
+    }
+
+    .card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.35rem;
+      margin-bottom: 0.85rem;
+      color: var(--accent-gold);
+    }
+
+    .card p {
+      color: var(--text-muted);
+      line-height: 1.65;
+      font-size: 0.98rem;
+    }
+
+    .hero-card {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.75rem;
+    }
+
+    input[type="number"] {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 0.95rem 1.25rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      width: 220px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose));
+      color: #0a0a0f;
+      border: none;
+      padding: 0.95rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    button:hover { transform: scale(1.04); filter: brightness(1.1); }
+    button:active { transform: scale(0.98); }
+
+    .result {
+      margin-top: 1.5rem;
+      min-height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      border-radius: 12px;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px dashed var(--border);
+    }
+
+    .result.leap { border-color: var(--success); color: var(--success); }
+    .result.not-leap { border-color: var(--danger); color: var(--danger); }
+
+    .code-block {
+      background: #0c0c14;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent-ice);
+      line-height: 1.6;
+    }
+
+    .timeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+    }
+
+    .chip {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .chip.leap { background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.35); color: var(--success); }
+    .chip.not-leap { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
+
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .cta-strip {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .cta-secondary {
+      background: transparent;
+      color: var(--accent-gold);
+      border: 1px solid var(--border);
+      padding: 0.85rem 1.5rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .cta-secondary:hover { background: rgba(212, 175, 55, 0.08); border-color: var(--accent-gold); }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+  <main class="container">
+    <header>
+      <span class="eyebrow">Gregorian Calendar Algorithm</span>
+      <h1>Chronos Leap</h1>
+      <p class="subtitle">An opulent, algorithmic shrine to the leap year. Test any year across the front-end, then inspect the same logic rendered in Python, TypeScript, and Java backends.</p>
+    </header>
+
+    <section class="grid">
+      <article class="card hero-card">
+        <h2>Instant Verdict</h2>
+        <p>Enter a year to see whether it violates the symmetry of 365.</p>
+        <div class="input-row">
+          <input id="yearInput" type="number" placeholder="e.g. 2024" min="1" max="999999" />
+          <button id="checkBtn">Check Year</button>
+          <button id="randomBtn">Random</button>
+        </div>
+        <div id="result" class="result">Awaiting input...</div>
+        <div class="timeline" id="history"></div>
+      </article>
+
+      <article class="card">
+        <h2>The Rule</h2>
+        <p>A year is a leap year if it is divisible by 4, except if divisible by 100, unless it is also divisible by 400. This correction keeps the calendar aligned with Earth's tropical year.</p>
+        <div class="code-block"><code>year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)</code></div>
+      </article>
+
+      <article class="card">
+        <h2>Why It Matters</h2>
+        <p>The Gregorian reform of 1582 trimmed the Julian drift by omitting three leap years every 400 years. Without it, Easter would eventually drift into summer (Meeus, 1991).</p>
+      </article>
+
+      <article class="card">
+        <h2>Front-end Implementation</h2>
+        <p>The interactive check above runs this exact function in your browser.</p>
+        <div class="code-block"><code id="jsCode">function isLeapYear(year) {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}</code></div>
+      </article>
+
+      <article class="card">
+        <h2>Backend Implementations</h2>
+        <p>Identical logic is deployed across three production-grade runtimes. Browse the source code in the repository or open the included files.</p>
+        <div class="cta-strip">
+          <a class="cta-secondary" href="backend/python/leap.py" download>Python</a>
+          <a class="cta-secondary" href="backend/typescript/src/leap.ts" download>TypeScript</a>
+          <a class="cta-secondary" href="backend/java/src/main/java/com/chronos/leap/service/LeapService.java" download>Java</a>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      <p>Built with obsessive attention to detail. Sources: Meeus, J. (1991). <em>Astronomical Algorithms</em>. Willmann-Bell.</p>
+    </footer>
+  </main>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const canvas = document.getElementById('starfield');
+      const ctx = canvas.getContext('2d');
+      let width, height, stars = [];
+      const STAR_COUNT = 220;
+
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      class Star {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.z = Math.random() * 1.5 + 0.5;
+          this.size = Math.random() * 1.4 + 0.3;
+          this.alpha = Math.random() * 0.6 + 0.2;
+          this.twinkle = Math.random() * Math.PI * 2;
+        }
+        update() {
+          this.twinkle += 0.02;
+          this.alpha = 0.25 + Math.abs(Math.sin(this.twinkle)) * 0.55;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * this.z, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(244, 241, 234, ${this.alpha})`;
+          ctx.fill();
+        }
+      }
+
+      function initStars() {
+        stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) stars.push(new Star());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        for (const star of stars) { star.update(); star.draw(); }
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener('resize', () => { resize(); initStars(); });
+      resize();
+      initStars();
+      animate();
+
+      function isLeapYear(year) {
+        const y = Number(year);
+        if (!Number.isFinite(y) || y < 1 || y > 999999 || !Number.isInteger(y)) return null;
+        return y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+      }
+
+      const input = document.getElementById('yearInput');
+      const checkBtn = document.getElementById('checkBtn');
+      const randomBtn = document.getElementById('randomBtn');
+      const result = document.getElementById('result');
+      const history = document.getElementById('history');
+
+      function render(year, verdict) {
+        const safe = Number(year);
+        result.classList.remove('leap', 'not-leap');
+        if (verdict === null) {
+          result.textContent = 'Please enter a valid positive integer year.';
+          result.classList.add('not-leap');
+          return;
+        }
+        const label = verdict ? 'is a leap year' : 'is not a leap year';
+        result.textContent = `${safe} ${label}`;
+        result.classList.add(verdict ? 'leap' : 'not-leap');
+
+        const chip = document.createElement('span');
+        chip.className = `chip ${verdict ? 'leap' : 'not-leap'}`;
+        chip.textContent = `${safe}: ${verdict ? 'Leap' : 'Common'}`;
+        chip.title = `${safe} ${label}`;
+        history.prepend(chip);
+        if (history.children.length > 12) history.lastChild.remove();
+      }
+
+      function check() {
+        render(input.value, isLeapYear(input.value));
+      }
+
+      function random() {
+        const year = Math.floor(Math.random() * 2400) + 1600;
+        input.value = year;
+        render(year, isLeapYear(year));
+      }
+
+      checkBtn.addEventListener('click', check);
+      randomBtn.addEventListener('click', random);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') check(); });
+    })();
+  </script>
+</body>
+</html>

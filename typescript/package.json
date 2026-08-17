@@ -1,0 +1,16 @@
+{
+  "name": "chronos-leap-typescript",
+  "version": "1.0.0",
+  "description": "Gregorian leap-year predicate in TypeScript",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "check": "tsc --noEmit",
+    "dev": "tsx src/leap.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
